@@ -3,6 +3,8 @@ package netgloo.controllers.data;
 import netgloo.controllers.util.Util;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -18,9 +20,9 @@ import static netgloo.controllers.util.string2FileUtil.string2File;
  */
 @Component
 public class HaiNanHangOperate {
-    private Map<String, String> cookies;
+    private static Map<String, String> cookies;
     private String path = HaiNanHangOperate.class.getResource("/").getPath().replaceAll("%20", " ") + "safecode.png";
-    public void getSafeCode() throws IOException {
+    public Map<String,String> getSafeCode() throws IOException {
         String url = "https://ffp.hnair.com/FFPClub/imgcode.do";
         Connection.Response response = Jsoup.connect(url).ignoreContentType(true) // 获取图片需设置忽略内容类型
                 .userAgent("Mozilla").method(Connection.Method.GET).timeout(3000).execute();
@@ -28,6 +30,7 @@ public class HaiNanHangOperate {
         byte[] bytes = response.bodyAsBytes();
         Util.saveFile(path, bytes);
         System.out.println("保存验证码到：" + path);
+        return cookies;
     }
     public String getEncryptKey() throws IOException {
         String baseURL = "https://ffp.hnair.com/FFPClub/member/memberFindAesKey";
@@ -40,12 +43,10 @@ public class HaiNanHangOperate {
         String body = null;
             Response = connection.method(Connection.Method.POST).cookies(cookies).data(datas).execute();
             body =Response.body();
-            cookies.putAll(Response.cookies());
-            Map<String,String> cookies2 = Response.cookies();
-            System.out.println(body);
+            //cookies.putAll(Response.cookies());
         return body;
     }
-    public String validate(String validCode_login) throws IOException {
+    public String validate(String validCode_login,Map<String,String>cookie) throws IOException {
         String baseURL = "https://ffp.hnair.com/FFPClub/imgcode.do?r0.7303532457942747";
         //Double random = Math.random();
         //baseURL+=random;
@@ -68,11 +69,11 @@ public class HaiNanHangOperate {
         datas.put("vc",validCode_login);
         Connection.Response Response = null;
         String body = null;
-        Response = connection.method(Connection.Method.POST).cookies(cookies).data(datas).execute();
+        Response = connection.method(Connection.Method.POST).cookies(cookie).data(datas).execute();
         body =Response.body();
-        cookies.putAll(Response.cookies());
-        Map<String,String> cookies = Response.cookies();
-        System.out.println(cookies);
+        //cookies.putAll(Response.cookies());
+        System.out.println(body);
+        System.out.println(Response.cookies());
         return body;
     }
     public String login(String userName,String login_pwd,String validCode_login) {
@@ -114,7 +115,7 @@ public class HaiNanHangOperate {
         System.out.println("输入验证码：");
         Scanner scan = new Scanner(System.in);
         String validCode_login = scan.next();
-        haiNanHangOperate.validate(validCode_login);
+        haiNanHangOperate.validate(validCode_login,cookies);
         String body = haiNanHangOperate.login(username,"049707",validCode_login);
 //        String key = haiNanHangOperate.getEncryptKey();
 //        String body = haiNanHangOperate.validate("gb68");

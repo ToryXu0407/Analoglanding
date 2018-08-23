@@ -12,6 +12,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
@@ -24,13 +25,11 @@ public class MainController {
   HaiNanHangOperate haiNanHangOperate = new HaiNanHangOperate();
   @RequestMapping("/")
   // @ResponseBody
-  public ModelAndView index() throws IOException {
-    String url = "https://ffp.hnair.com/FFPClub/imgcode.do";
-
-    ModelAndView mav = new ModelAndView();
-    mav.setViewName("hello.html");
-    mav.addObject("url",url);
-    return mav;
+  public String index(HttpSession session) throws IOException {
+    Map<String,String> cookies = haiNanHangOperate.getSafeCode();
+    session.setAttribute("cookies",cookies);
+    System.out.println("session-cookies"+session.getAttribute("cookies"));
+    return "hello.html";
   }
   @RequestMapping("/getEncryptKey")
   // @ResponseBody
@@ -41,8 +40,10 @@ public class MainController {
   }
   @RequestMapping(value="/action",method = RequestMethod.POST)
    @ResponseBody
-  public String action(String validCode_login,String userName,String login_pwd) throws IOException {
-    String body = haiNanHangOperate.validate(validCode_login);
+  public String action(String validCode_login,String userName,String login_pwd,HttpSession session) throws IOException {
+    Map<String,String> cookies = (Map<String, String>) session.getAttribute("cookies");
+    System.out.println("session-cookies"+cookies);
+    String body = haiNanHangOperate.validate(validCode_login,cookies);
     return "hello.html";
   }
 

@@ -1,14 +1,73 @@
 <!DOCTYPE html>
 <html>
+<script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="/js/encrypt.js"></script>
 <body>
   <h2>Hello world!</h2>
   <p>
     By <a href="http://netgloo.com/en">Netgloo</a>!
-    <img src="https://easternmiles.ceair.com/mpf/register/getNumberCaptcha">
-  <form action="/action" method="get">
-    First name: <input type="text" name="yanzhengma" />
-    <input type="submit" value="Submit" />
+
+    <img src="https://ffp.hnair.com/FFPClub/imgcode.do">
+  <form id = "signInForm">
+    账号: <input type="text" name="username" id="username"/>
+    密码: <input type="text" name="password" id="password"/>
+    验证码: <input type="text" name="yanzhengma" id="yanzhengma"/>
+    <input type="submit" value="Submit" onclick="btn_img_click()"/>
   </form>
   </p>
 </body>
+<script type="text/javascript">
+    function btn_img_click()
+    {
+            var validCode_login = $("#yanzhengma").val();
+            var password_login = (EncryptPWD($("#password").val()));
+            var userName_login = $("#username").val();
+            $.ajax({
+                type : 'POST',
+                url : '/action',
+                data : {
+                    validCode_login:validCode_login,
+                    userName:userName_login,
+                    login_pwd:password_login
+                },
+                dataType : 'json',
+                async:false,
+                success : function(data) {
+                    if(data.state==1){
+                        alert("成功！");
+                    }else{
+                      alert("失败");
+                    }
+                },
+                error : function(data) {
+                }
+            });
+    }
+    function EncryptPWD(word){
+        var aesKey=getEncryptKey();
+        var key = CryptoJS.enc.Utf8.parse(aesKey);
+        var iv  = CryptoJS.enc.Utf8.parse(aesKey);
+        var srcs = CryptoJS.enc.Utf8.parse(word);
+        var encrypted = CryptoJS.AES.encrypt(srcs, key, { iv: iv,mode:CryptoJS.mode.CBC});
+        return encrypted.toString();
+    }
+
+    function getEncryptKey()
+    {
+        var passKey="";
+        jQuery.ajax({
+            async: false,
+            type : "POST",
+            url : '/getEncryptKey',
+            dataType : 'json',
+            success : function(data) {
+                passKey=data.key;
+            },
+            error:function(){
+                alert("error");
+            }
+        });
+        return passKey;
+    }
+</script>
 </html>

@@ -1,29 +1,48 @@
 package netgloo.controllers;
  
 import netgloo.controllers.data.HaiNanHangOperate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Map;
+import java.util.Random;
 // import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class MainController {
-
+  @Autowired
+  HaiNanHangOperate haiNanHangOperate = new HaiNanHangOperate();
   @RequestMapping("/")
   // @ResponseBody
-  public String index() {
-    String url = "http://sf.shenzhenair.com/szffp-web/login/getCaptchaCode?id=1534931841049";
-    return "hello.html";
+  public ModelAndView index() throws IOException {
+    String url = "https://ffp.hnair.com/FFPClub/imgcode.do";
+
+    ModelAndView mav = new ModelAndView();
+    mav.setViewName("hello.html");
+    mav.addObject("url",url);
+    return mav;
   }
-  @RequestMapping("/action")
+  @RequestMapping("/getEncryptKey")
   // @ResponseBody
-  public String action(String yanzhengma) throws IOException {
-    String id = "15858259121";
-    String password = "049707";
-    HaiNanHangOperate haiNanHangOperate = new HaiNanHangOperate();
-    String body = haiNanHangOperate.login(id,password,yanzhengma);
-    System.out.println(body);
+  public void getKey(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    String key = haiNanHangOperate.getEncryptKey();
+    PrintWriter out = response.getWriter();
+    out.println(key);
+  }
+  @RequestMapping(value="/action",method = RequestMethod.POST)
+   @ResponseBody
+  public String action(String validCode_login,String userName,String login_pwd) throws IOException {
+    String body = haiNanHangOperate.validate(validCode_login);
     return "hello.html";
   }
 

@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -12,6 +14,7 @@ import java.util.Map;
 /*
     爬取中国南方航空，登陆后获得数据，返回两个JSONObject，通过解析获得想要的属性值，放到Map。
  */
+@Component
 public class NanHangOperate {
     Map<String,String> cookies = null;
     public JSONObject login(String mobile, String password) {
@@ -33,7 +36,7 @@ public class NanHangOperate {
         Boolean success;
         try {
             smsResponse = connection.method(Connection.Method.POST).data(datas).execute();
-            body = smsResponse.body();
+            System.out.println(body);
             JSONObject jsonpObject = JSON.parseObject(body);
             success = jsonpObject.getBoolean("success");
         } catch (IOException e) {

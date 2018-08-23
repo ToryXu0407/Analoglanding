@@ -1,55 +1,105 @@
 package netgloo.controllers.data;
 
+import netgloo.controllers.util.Util;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
+
+import static netgloo.controllers.util.string2FileUtil.string2File;
+
 
 /*
     爬取海南航空数据。
  */
+@Component
 public class HaiNanHangOperate {
-    public String Beforelogin() throws IOException {
-        String baseURL = "https://easternmiles.ceair.com/mpf/register/getNumberCaptcha?";
-        String time = System.currentTimeMillis()+"";
-        baseURL+=time;
-        System.out.println("time"+time);
-        Document doc = Jsoup.connect(baseURL).ignoreContentType(true).get();
-        String docc = doc.body().html();
-        InputStream inputStream   =   new ByteArrayInputStream(docc.getBytes());
-        File file = null;
-        OutputStream os = new FileOutputStream(file);
-        int bytesRead = 0;
-        byte[] buffer = new byte[8192];
-        while ((bytesRead = inputStream.read(buffer, 0, 8192)) != -1) {
-            os.write(buffer, 0, bytesRead);
-        }
-        os.close();
-        inputStream.close();
-        Elements elements = doc.select("img");
-        System.out.println(elements);
-        String body = doc.toString();
+    private Map<String, String> cookies;
+    private String path = HaiNanHangOperate.class.getResource("/").getPath().replaceAll("%20", " ") + "safecode.png";
+    public void getSafeCode() throws IOException {
+        String url = "https://ffp.hnair.com/FFPClub/imgcode.do";
+        Connection.Response response = Jsoup.connect(url).ignoreContentType(true) // 获取图片需设置忽略内容类型
+                .userAgent("Mozilla").method(Connection.Method.GET).timeout(3000).execute();
+        cookies = response.cookies();
+        byte[] bytes = response.bodyAsBytes();
+        Util.saveFile(path, bytes);
+        System.out.println("保存验证码到：" + path);
+    }
+    public String getEncryptKey() throws IOException {
+        String baseURL = "https://ffp.hnair.com/FFPClub/member/memberFindAesKey";
+        Connection connection = Jsoup.connect(baseURL).timeout(20000);
+        // ~设置header
+        connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
+        // ~请求参数
+        Map<String, String> datas = new HashMap<>(16);
+        Connection.Response Response = null;
+        String body = null;
+            Response = connection.method(Connection.Method.POST).cookies(cookies).data(datas).execute();
+            body =Response.body();
+            cookies.putAll(Response.cookies());
+            Map<String,String> cookies2 = Response.cookies();
+            System.out.println(body);
         return body;
     }
-    public String login(String userName,String login_pwd,String validCode_login) throws IOException {
-        String baseURL = "https://easternmiles.ceair.com/mpf/sign/signIn_CN?locale=cn";
+    public String validate(String validCode_login) throws IOException {
+        String baseURL = "https://ffp.hnair.com/FFPClub/imgcode.do?r0.7303532457942747";
+        //Double random = Math.random();
+        //baseURL+=random;
+        Connection connection = Jsoup.connect(baseURL).timeout(20000);
+        // ~设置header
+        connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
+        connection.header("Accept", "application/json, text/javascript, */*; q=0.01");
+        connection.header("Accept-Encoding", "gzip, deflate, br");
+        connection.header("Accept-Language", "zh-CN,zh;q=0.9");
+        connection.header("Connection", "keep-alive");
+        connection.header("Content-Length", "7");
+        connection.header("Content-Type", "application/json;charset=UTF-8");
+        connection.header("Host", "ffp.hnair.com");
+        connection.header("Origin", "https://ffp.hnair.com");
+        connection.header("Referer", "https://ffp.hnair.com/FFPClub/member/user/main?cp_d=1");
+        connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
+        connection.header("X-Requested-With", "XMLHttpRequest");
+        // ~请求参数
+        Map<String, String> datas = new HashMap<>(16);
+        datas.put("vc",validCode_login);
+        Connection.Response Response = null;
+        String body = null;
+        Response = connection.method(Connection.Method.POST).cookies(cookies).data(datas).execute();
+        body =Response.body();
+        cookies.putAll(Response.cookies());
+        Map<String,String> cookies = Response.cookies();
+        System.out.println(cookies);
+        return body;
+    }
+    public String login(String userName,String login_pwd,String validCode_login) {
+        String baseURL = "https://ffp.hnair.com/FFPClub/member/loginIdx";
         Connection connection = Jsoup.connect(baseURL).timeout(20000);
         connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
+        connection.header("Accept", "application/json, text/javascript, */*; q=0.01");
+        connection.header("Accept-Encoding", "gzip, deflate, br");
+        connection.header("Accept-Language", "zh-CN,zh;q=0.9");
+        connection.header("Connection", "keep-alive");
+        connection.header("Content-Length", "80");
+        connection.header("Content-Type", "application/json;charset=UTF-8");
+        connection.header("Host", "ffp.hnair.com");
+        connection.header("Origin", "https://ffp.hnair.com");
+        connection.header("Referer", "https://ffp.hnair.com/FFPClub/member/user/main?cp_d=1");
+        connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
+        connection.header("X-Requested-With", "XMLHttpRequest");
         Connection.Response Response = null;
         Map<String, String> datas = new HashMap<>(16);
-        datas.put("validCode_login", "validCode_login");
+        datas.put("validCode_login", validCode_login);
         datas.put("userName", userName);
         datas.put("login_pwd", login_pwd);
         String body = null;
         try {
-            Response = connection.method(Connection.Method.POST).execute();
+            Response = connection.method(Connection.Method.POST).data(datas).cookies(cookies).execute();
             body = Response.body();
             System.out.println(body);
-            //JSONObject jsonpObject = JSON.parseObject(body);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -58,10 +108,22 @@ public class HaiNanHangOperate {
 
     public static void main(String[] args) throws Exception {
         HaiNanHangOperate haiNanHangOperate = new HaiNanHangOperate();
-        String body = haiNanHangOperate.Beforelogin();
-        String time = System.currentTimeMillis()+"";
-        System.out.println("time"+time);
-        String body2 = haiNanHangOperate.login("15858259121","049707","63");
-        System.out.println(body);
+        String username = "15858259121";
+        haiNanHangOperate.getSafeCode();
+        username = haiNanHangOperate.getEncryptKey();
+        System.out.println("输入验证码：");
+        Scanner scan = new Scanner(System.in);
+        String validCode_login = scan.next();
+        haiNanHangOperate.validate(validCode_login);
+        String body = haiNanHangOperate.login(username,"049707",validCode_login);
+//        String key = haiNanHangOperate.getEncryptKey();
+//        String body = haiNanHangOperate.validate("gb68");
+//        System.out.println(body);
+        //String body2 = haiNanHangOperate.login("15858259121","049707","b6y4");
+//        String body = haiNanHangOperate.Beforelogin();
+//        String time = System.currentTimeMillis()+"";
+//        System.out.println("time"+time);
+//        String body2 = haiNanHangOperate.login("15858259121","049707","63");
+//        System.out.println(body);
     }
 }

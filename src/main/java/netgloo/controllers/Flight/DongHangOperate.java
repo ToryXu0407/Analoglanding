@@ -1,4 +1,4 @@
-package netgloo.controllers.data;
+package netgloo.controllers.Flight;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;

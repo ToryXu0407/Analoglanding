@@ -1,10 +1,9 @@
-package netgloo.controllers.data;
+package netgloo.controllers.Flight;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -45,13 +44,13 @@ public class NanHangOperate {
         if (success) {
             // 登陆成功后的cookie信息
             cookies = smsResponse.cookies();
-            JSONObject jsonObject = JSON.parseObject(body).getJSONObject("data");
+            JSONObject jsonObject = JSON.parseObject(body).getJSONObject("Flight");
             return jsonObject;
         } else {
                 throw new RuntimeException("抱歉，您输入的用户名或者密码有误!");
             }
         }
-    public JSONObject serviceRecord(Map<String, String> cookies) throws Exception {
+    public JSONObject Operate(Map<String, String> cookies) throws Exception {
        if(cookies.isEmpty()) return null;
         String URL = "https://skypearl.csair.com/skypearl/cn/queryMileageAndTierAction.action";
                 Connection connection = Jsoup.connect(URL).timeout(3000);
@@ -72,11 +71,11 @@ public class NanHangOperate {
                 JSONObject jsonObject = JSON.parseObject(body).getJSONObject("attachment");
                 return jsonObject;
     }
-    public Map<String,String> Operate() throws Exception {
+    public Map<String,String> Process() throws Exception {
         Map<String,String> map = new HashMap<>();
         NanHangOperate NanHangOperate = new NanHangOperate();
         JSONObject jsonObjectLogin = NanHangOperate.login("15858259121","049707");
-        JSONObject jsonObjectMileage = NanHangOperate.serviceRecord(NanHangOperate.cookies);
+        JSONObject jsonObjectMileage = NanHangOperate.Operate(NanHangOperate.cookies);
         map.put("userName", (String) jsonObjectLogin.get("userName"));
         map.put("memberNo", (String) jsonObjectMileage.get("memberNo"));
         map.put("membersLevel", (String) jsonObjectLogin.get("membersLevel"));
@@ -89,6 +88,6 @@ public class NanHangOperate {
     }
     public static void main(String[] args) throws Exception {
         NanHangOperate nanHangOperate = new NanHangOperate();
-        System.out.println(nanHangOperate.Operate());
+        System.out.println(nanHangOperate.Process());
     }
 }

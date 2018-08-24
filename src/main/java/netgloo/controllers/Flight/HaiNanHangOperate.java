@@ -1,10 +1,10 @@
-package netgloo.controllers.data;
+package netgloo.controllers.Flight;
 
 import netgloo.controllers.util.Util;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -12,18 +12,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-import static netgloo.controllers.util.string2FileUtil.string2File;
-
 
 /*
-    爬取海南航空数据。
+    爬取海南航空数据,获得获得图形验证并获得cookies,前端页面输入账号密码验证码，根据该cookies去进行登陆。
  */
 @Component
 public class HaiNanHangOperate {
     private static Map<String, String> cookies;
-    private String path = HaiNanHangOperate.class.getResource("/").getPath().replaceAll("%20", " ") + "safecode.png";
+    private String path = HaiNanHangOperate.class.getResource("/").getPath().replaceAll("%20", " ") + "hnsafecode.png";
     public Map<String,String> getSafeCode() throws IOException {
-        String url = "https://ffp.hnair.com/FFPClub/imgcode.do";
+        String url = "https://ffp.hnair.com/FFPClub/imgcode.do?r";
+        Double random = Math.random();
+        url+=random;
         Connection.Response response = Jsoup.connect(url).ignoreContentType(true) // 获取图片需设置忽略内容类型
                 .userAgent("Mozilla").method(Connection.Method.GET).timeout(3000).execute();
         cookies = response.cookies();
@@ -32,7 +32,7 @@ public class HaiNanHangOperate {
         System.out.println("保存验证码到：" + path);
         return cookies;
     }
-    public String getEncryptKey() throws IOException {
+    public String getEncryptKey(Map<String,String>cookies) throws IOException {
         String baseURL = "https://ffp.hnair.com/FFPClub/member/memberFindAesKey";
         Connection connection = Jsoup.connect(baseURL).timeout(20000);
         // ~设置header
@@ -43,40 +43,10 @@ public class HaiNanHangOperate {
         String body = null;
             Response = connection.method(Connection.Method.POST).cookies(cookies).data(datas).execute();
             body =Response.body();
-            //cookies.putAll(Response.cookies());
+            cookies.putAll(Response.cookies());
         return body;
     }
-    public String validate(String validCode_login,Map<String,String>cookie) throws IOException {
-        String baseURL = "https://ffp.hnair.com/FFPClub/imgcode.do?r0.7303532457942747";
-        //Double random = Math.random();
-        //baseURL+=random;
-        Connection connection = Jsoup.connect(baseURL).timeout(20000);
-        // ~设置header
-        connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
-        connection.header("Accept", "application/json, text/javascript, */*; q=0.01");
-        connection.header("Accept-Encoding", "gzip, deflate, br");
-        connection.header("Accept-Language", "zh-CN,zh;q=0.9");
-        connection.header("Connection", "keep-alive");
-        connection.header("Content-Length", "7");
-        connection.header("Content-Type", "application/json;charset=UTF-8");
-        connection.header("Host", "ffp.hnair.com");
-        connection.header("Origin", "https://ffp.hnair.com");
-        connection.header("Referer", "https://ffp.hnair.com/FFPClub/member/user/main?cp_d=1");
-        connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
-        connection.header("X-Requested-With", "XMLHttpRequest");
-        // ~请求参数
-        Map<String, String> datas = new HashMap<>(16);
-        datas.put("vc",validCode_login);
-        Connection.Response Response = null;
-        String body = null;
-        Response = connection.method(Connection.Method.POST).cookies(cookie).data(datas).execute();
-        body =Response.body();
-        //cookies.putAll(Response.cookies());
-        System.out.println(body);
-        System.out.println(Response.cookies());
-        return body;
-    }
-    public String login(String userName,String login_pwd,String validCode_login) {
+    public Map<String,String> login(String userName,String login_pwd,String validCode_login,Map<String,String>cookies) {
         String baseURL = "https://ffp.hnair.com/FFPClub/member/loginIdx";
         Connection connection = Jsoup.connect(baseURL).timeout(20000);
         connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
@@ -84,12 +54,11 @@ public class HaiNanHangOperate {
         connection.header("Accept-Encoding", "gzip, deflate, br");
         connection.header("Accept-Language", "zh-CN,zh;q=0.9");
         connection.header("Connection", "keep-alive");
-        connection.header("Content-Length", "80");
-        connection.header("Content-Type", "application/json;charset=UTF-8");
+        connection.header("Content-Length", "7");
+        connection.header("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
         connection.header("Host", "ffp.hnair.com");
         connection.header("Origin", "https://ffp.hnair.com");
         connection.header("Referer", "https://ffp.hnair.com/FFPClub/member/user/main?cp_d=1");
-        connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
         connection.header("X-Requested-With", "XMLHttpRequest");
         Connection.Response Response = null;
         Map<String, String> datas = new HashMap<>(16);
@@ -100,25 +69,71 @@ public class HaiNanHangOperate {
         try {
             Response = connection.method(Connection.Method.POST).data(datas).cookies(cookies).execute();
             body = Response.body();
-            System.out.println(body);
+            cookies.putAll(Response.cookies());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return body;
+        return cookies;
     }
-
+    public Map<String,String> Operate(Map<String,String>cookies) {
+        String baseURL = "https://ffp.hnair.com/FFPClub/member/user/accountInfo";
+        Connection connection = Jsoup.connect(baseURL).timeout(20000);
+        connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
+        connection.header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+        connection.header("Accept-Encoding", "gzip, deflate, br");
+        connection.header("Accept-Language", "zh-CN,zh;q=0.9");
+        connection.header("Connection", "keep-alive");
+        connection.header("Content-Length", "6");
+        connection.header("Host", "ffp.hnair.com");
+        connection.header("Upgrade-Insecure-Requests", "1");
+        connection.header("Referer", "https://ffp.hnair.com/FFPClub/member/user/main?wdzh");
+        connection.header("X-Requested-With", "XMLHttpRequest");
+        Connection.Response Response = null;
+        Map<String,String> result = new HashMap<>();
+        String body = null;
+        try {
+            Response = connection.method(Connection.Method.POST).cookies(cookies).execute();
+            body = Response.body();
+            Document doc = Jsoup.parse(Response.body());
+            Elements elements = doc.select("[class=f333]");
+            String username = elements.get(0).text();
+            username = username.substring(0,username.indexOf("先"));
+            elements = doc.select("[class=red]");
+            String cid = elements.get(0).text();
+            String cardlevel = elements.get(1).text();
+            String point = elements.get(3).text();
+            String upgrade = elements.get(6).text();
+            String[] upgrades = upgrade.split("/");
+            String upgradeMileage = upgrades[0];
+            String upgradeSegment = upgrades[1];
+            String expire = elements.get(5).text();
+            String uplevelpoint = elements.get(7).text();
+            String uplevelsegment = elements.get(8).text();
+            result.put("username",username);
+            result.put("cid",cid);
+            result.put("cardlevel",cardlevel);
+            result.put("point",point);
+            result.put("expire",expire);
+            result.put("upgradeMileage",upgradeMileage);
+            result.put("upgradeSegment",upgradeSegment);
+            result.put("uplevelpoint",uplevelpoint);
+            result.put("uplevelsegment",uplevelsegment);
+            System.out.println(result);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return result;
+    }
     public static void main(String[] args) throws Exception {
         HaiNanHangOperate haiNanHangOperate = new HaiNanHangOperate();
         String username = "15858259121";
         haiNanHangOperate.getSafeCode();
-        username = haiNanHangOperate.getEncryptKey();
+        username = haiNanHangOperate.getEncryptKey(cookies);
         System.out.println("输入验证码：");
         Scanner scan = new Scanner(System.in);
         String validCode_login = scan.next();
-        haiNanHangOperate.validate(validCode_login,cookies);
-        String body = haiNanHangOperate.login(username,"049707",validCode_login);
+        haiNanHangOperate.login(username,"049707",validCode_login,cookies);
 //        String key = haiNanHangOperate.getEncryptKey();
-//        String body = haiNanHangOperate.validate("gb68");
 //        System.out.println(body);
         //String body2 = haiNanHangOperate.login("15858259121","049707","b6y4");
 //        String body = haiNanHangOperate.Beforelogin();

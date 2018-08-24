@@ -1,4 +1,4 @@
-package netgloo.controllers.data;
+package netgloo.controllers.Insurance;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -6,12 +6,9 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 /*
     模拟登陆国华人寿
@@ -68,12 +65,12 @@ public class GuoHuaOperate {
         connection.header("Referer", "https://eservice.95549.cn/eservice/home.do?action=index");
         connection.header("Upgrade-Insecure-Requests", "1");
         connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
-        Connection.Response Res = connection.method(Connection.Method.POST).ignoreContentType(true)
+        Connection.Response Response = connection.method(Connection.Method.POST).ignoreContentType(true)
                 .cookies(cookies)
                 .execute();
-        String body = Res.body();
+        String body = Response.body();
         System.out.println("Res"+body);
-        Document doc = Jsoup.parse(Res.body());
+        Document doc = Jsoup.parse(Response.body());
         Elements elements = doc.select("[class=account]");
         result.put("username",elements.get(0).text().substring(5));
         System.out.println(result);
@@ -92,13 +89,13 @@ public class GuoHuaOperate {
             connection.header("Referer", "https://eservice.95549.cn/eservice/home.do?action=index");
             connection.header("Upgrade-Insecure-Requests", "1");
             connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
-            Connection.Response Res = connection.method(Connection.Method.POST).ignoreContentType(true)
+            Connection.Response Response = connection.method(Connection.Method.POST).ignoreContentType(true)
                     .cookies(cookies)
                     .execute();
-            String body = Res.body();
-            System.out.println("Res"+body);
+            String body = Response.body();
+            System.out.println("Response"+body);
             Map<String,String> result = new HashMap<>();
-            Document doc = Jsoup.parse(Res.body());
+            Document doc = Jsoup.parse(Response.body());
             Elements elements = doc.select("[class=b8101d fw MSYH]");
             result.put("aviliablepoints",elements.get(0).text());
             result.put("frozenpoints",elements.get(1).text());

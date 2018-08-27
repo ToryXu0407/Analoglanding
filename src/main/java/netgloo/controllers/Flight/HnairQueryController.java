@@ -1,6 +1,6 @@
 package netgloo.controllers.Flight;
 
-import netgloo.controllers.util.Util;
+import netgloo.controllers.util.Byte2ImageUtil;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -14,12 +14,13 @@ import java.util.Scanner;
 
 
 /*
-    爬取海南航空数据,获得获得图形验证并获得cookies,前端页面输入账号密码验证码，根据该cookies去进行登陆。
+    爬取海南航空数据,分两步骤,调用getSafeCode()获得图形验证并获得cookies,将图形验证显示在前端页面,
+    输入账号密码验证码，前端发起请求获得AES加密KEY，再将值传回后台，并根据该cookies进行登陆。
  */
 @Component
-public class HaiNanHangOperate {
+public class HnairQueryController {
     private static Map<String, String> cookies;
-    private String path = HaiNanHangOperate.class.getResource("/").getPath().replaceAll("%20", " ") + "hnsafecode.png";
+    private String path = HnairQueryController.class.getResource("/").getPath().replaceAll("%20", " ") + "hnsafecode.png";
     public Map<String,String> getSafeCode() throws IOException {
         String url = "https://ffp.hnair.com/FFPClub/imgcode.do?r";
         Double random = Math.random();
@@ -28,7 +29,7 @@ public class HaiNanHangOperate {
                 .userAgent("Mozilla").method(Connection.Method.GET).timeout(3000).execute();
         cookies = response.cookies();
         byte[] bytes = response.bodyAsBytes();
-        Util.saveFile(path, bytes);
+        Byte2ImageUtil.saveFile(path, bytes);
         System.out.println("保存验证码到：" + path);
         return cookies;
     }
@@ -46,6 +47,37 @@ public class HaiNanHangOperate {
             cookies.putAll(Response.cookies());
         return body;
     }
+
+//    public Map<String,String> validate(String validCode_login,Map<String,String>cookies) {
+//        String baseURL = "https://ffp.hnair.com/FFPClub/imgcode.do?r";
+//        Double random = Math.random();
+//        baseURL+=random;
+//        Connection connection = Jsoup.connect(baseURL).timeout(20000);
+//        connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
+//        connection.header("Accept", "application/json, text/javascript, */*; q=0.01");
+//        connection.header("Accept-Encoding", "gzip, deflate, br");
+//        connection.header("Accept-Language", "zh-CN,zh;q=0.9");
+//        connection.header("Connection", "keep-alive");
+//        connection.header("Content-Length", "7");
+//        connection.header("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+//        connection.header("Host", "ffp.hnair.com");
+//        connection.header("Origin", "https://ffp.hnair.com");
+//        connection.header("Referer", "https://ffp.hnair.com/FFPClub/member/user/main?cp_d=1");
+//        connection.header("X-Requested-With", "XMLHttpRequest");
+//        Connection.Response Response = null;
+//        Map<String, String> datas = new HashMap<>(16);
+//        datas.put("validCode_login", validCode_login);
+//        String body = null;
+//        try {
+//            Response = connection.method(Connection.Method.POST).data(datas).cookies(cookies).execute();
+//            body = Response.body();
+//            System.out.println(body);
+//           // cookies.putAll(Response.cookies());
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//        return cookies;
+//    }
     public Map<String,String> login(String userName,String login_pwd,String validCode_login,Map<String,String>cookies) {
         String baseURL = "https://ffp.hnair.com/FFPClub/member/loginIdx";
         Connection connection = Jsoup.connect(baseURL).timeout(20000);
@@ -69,6 +101,7 @@ public class HaiNanHangOperate {
         try {
             Response = connection.method(Connection.Method.POST).data(datas).cookies(cookies).execute();
             body = Response.body();
+            System.out.println(body);
             cookies.putAll(Response.cookies());
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -125,7 +158,7 @@ public class HaiNanHangOperate {
         return result;
     }
     public static void main(String[] args) throws Exception {
-        HaiNanHangOperate haiNanHangOperate = new HaiNanHangOperate();
+        HnairQueryController haiNanHangOperate = new HnairQueryController();
         String username = "15858259121";
         haiNanHangOperate.getSafeCode();
         username = haiNanHangOperate.getEncryptKey(cookies);

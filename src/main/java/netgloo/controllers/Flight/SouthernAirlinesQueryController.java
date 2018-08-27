@@ -14,7 +14,7 @@ import java.util.Map;
     爬取中国南方航空，登陆后获得数据，返回两个JSONObject，通过解析获得想要的属性值，放到Map。
  */
 @Component
-public class NanHangOperate {
+public class SouthernAirlinesQueryController {
     Map<String,String> cookies = null;
     public JSONObject login(String mobile, String password) {
         Connection connection = Jsoup.connect("https://b2c.csair.com/portal/user/login").timeout(20000);
@@ -73,7 +73,7 @@ public class NanHangOperate {
     }
     public Map<String,String> Process() throws Exception {
         Map<String,String> map = new HashMap<>();
-        NanHangOperate NanHangOperate = new NanHangOperate();
+        SouthernAirlinesQueryController NanHangOperate = new SouthernAirlinesQueryController();
         JSONObject jsonObjectLogin = NanHangOperate.login("15858259121","049707");
         JSONObject jsonObjectMileage = NanHangOperate.Operate(NanHangOperate.cookies);
         map.put("userName", (String) jsonObjectLogin.get("userName"));
@@ -87,7 +87,7 @@ public class NanHangOperate {
         return map;
     }
     public static void main(String[] args) throws Exception {
-        NanHangOperate nanHangOperate = new NanHangOperate();
+        SouthernAirlinesQueryController nanHangOperate = new SouthernAirlinesQueryController();
         System.out.println(nanHangOperate.Process());
     }
 }

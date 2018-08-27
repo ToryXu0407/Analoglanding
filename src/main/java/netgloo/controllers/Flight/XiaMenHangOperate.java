@@ -1,6 +1,6 @@
 package netgloo.controllers.Flight;
 
-import netgloo.controllers.util.Util;
+import netgloo.controllers.util.Byte2ImageUtil;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 
 
 /*
@@ -28,7 +27,7 @@ public class XiaMenHangOperate {
                 .userAgent("Mozilla").method(Connection.Method.GET).timeout(3000).cookies(cookies).execute();
         //cookies.putAll(response.cookies());
         byte[] bytes = response.bodyAsBytes();
-        Util.saveFile(path, bytes);
+        Byte2ImageUtil.saveFile(path, bytes);
         System.out.println("保存验证码到：" + path);
         return cookies;
     }

@@ -8,6 +8,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 /*
@@ -15,7 +16,7 @@ import java.util.Map;
  */
 public class GuoHuaOperate {
 
-    public Map<String,String> login(String mobile, String password) {
+    public Map<String,String> login(String mobile, String password,String sid) {
         Connection connection = Jsoup.connect("https://eservice.95549.cn/eservice/login.action?action=login").timeout(20000);
         // 使用ip代理
 //        List<String> ipList = getProxyIpList();
@@ -25,7 +26,7 @@ public class GuoHuaOperate {
         connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36");
         // ~请求参数
         Map<String, String> datas = new HashMap<>(16);
-        datas.put("sid","SJzVb22LfyxvLPYYT2LFgJxzQ92LnNmLlpvShp0sSKhpd6kcNXtt!376757450!-1042195375!1535016555018");
+        datas.put("sid",sid);
         datas.put("username", mobile);
         datas.put("password", password);
         datas.put("loginType", "1");
@@ -50,7 +51,15 @@ public class GuoHuaOperate {
                 throw new RuntimeException("抱歉，您输入的用户名或者密码有误!");
             }
     }
-
+    public String getSid() throws IOException {
+        String url = "https://eservice.95549.cn/eservice/login.action?action=init";
+        Connection.Response Response = Jsoup.connect(url).ignoreContentType(true) // 获取图片需设置忽略内容类型
+                .userAgent("Mozilla").method(Connection.Method.GET).timeout(3000).execute();
+        Document doc = Jsoup.parse(Response.body());
+        Elements elements = doc.select("[id=sid]");
+        String Sid = elements.get(0).attr("value");
+        return Sid;
+    }
 
     public Map<String,String> Index(Map<String, String> cookies,Map<String,String> result) throws Exception {
         if(cookies.isEmpty()) return null;
@@ -60,7 +69,6 @@ public class GuoHuaOperate {
         connection.header("Accept-Encoding", "gzip, deflate, br");
         connection.header("Accept-Language", "zh-CN,zh;q=0.9");
         connection.header("Connection", "keep-alive");
-        connection.header("Content-Length", "0");
         connection.header("Host", "eservice.95549.cn");
         connection.header("Referer", "https://eservice.95549.cn/eservice/home.do?action=index");
         connection.header("Upgrade-Insecure-Requests", "1");
@@ -69,7 +77,6 @@ public class GuoHuaOperate {
                 .cookies(cookies)
                 .execute();
         String body = Response.body();
-        System.out.println("Res"+body);
         Document doc = Jsoup.parse(Response.body());
         Elements elements = doc.select("[class=account]");
         result.put("username",elements.get(0).text().substring(5));
@@ -93,7 +100,6 @@ public class GuoHuaOperate {
                     .cookies(cookies)
                     .execute();
             String body = Response.body();
-            System.out.println("Response"+body);
             Map<String,String> result = new HashMap<>();
             Document doc = Jsoup.parse(Response.body());
             Elements elements = doc.select("[class=b8101d fw MSYH]");
@@ -102,16 +108,17 @@ public class GuoHuaOperate {
             System.out.println(result);
             return result;
         }
-    public Map<String,String> Operate() throws Exception {
+    public Map<String,String> Operate(String mobile,String password,String sid) throws Exception {
         GuoHuaOperate GuoHuaOperate = new GuoHuaOperate();
-        Map<String,String> cookies= GuoHuaOperate.login("15858259121","049707");
+        Map<String,String> cookies= GuoHuaOperate.login(mobile,password,sid);
         Map<String,String> result= GuoHuaOperate.PointsRecord(cookies);
         result = GuoHuaOperate.Index(cookies,result);
         return result;
     }
         public static void main(String[] args) throws Exception {
             GuoHuaOperate GuoHuaOperate = new GuoHuaOperate();
-            System.out.println(GuoHuaOperate.Operate());
+            String sid = GuoHuaOperate.getSid();
+            System.out.println(GuoHuaOperate.Operate("15858259121","049707",sid));
         }
     }
 

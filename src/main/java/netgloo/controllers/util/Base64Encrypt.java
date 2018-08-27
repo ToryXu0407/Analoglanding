@@ -75,7 +75,7 @@ public class Base64Encrypt {
         return decoded;
     }
     public static void main(String[] args) {
-        String input = "111111";
+        String input = "82793351";
         String encode = base64Encode(input.getBytes());
         System.out.println("encode: "+encode);
         String decode = new String(base64Decode(encode));

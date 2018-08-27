@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-public class Util {
+public class Byte2ImageUtil {
     /**
      * 将字节流转换成文件
      *
